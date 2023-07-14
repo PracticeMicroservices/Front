@@ -10,6 +10,7 @@
                 <a id="authBrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Auth</a>
                 <a id="logBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Log</a>
                 <a id="mailBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Mail</a>
+                <a id="logGBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test gRPC log</a>
 
                 <div id="output" class="mt-5" style="outline: 1px solid silver; padding: 2em;">
                     <span class="text-muted">Output shows here...</span>
@@ -38,122 +39,173 @@
         let brokerBtn = document.getElementById("brokerBtn");
         let authBrokerBtn = document.getElementById("authBrokerBtn");
         let logBtn = document.getElementById("logBtn");
-        let mailBtn = document.getElementById("mailBtn");
-        let outPut = document.getElementById("output");
+        let logGBtn = document.getElementById("logGBtn");
+        let output = document.getElementById("output");
         let sent = document.getElementById("payload");
-        let received = document.getElementById("received");
+        let recevied = document.getElementById("received");
+        let mailBtn = document.getElementById("mailBtn");
 
         mailBtn.addEventListener("click", function() {
+
             const payload = {
                 action: "mail",
                 mail: {
                     from: "me@example.com",
-                    to: "test@exampl.com",
+                    to: "you@there.com",
                     subject: "Test email",
-                    message:"This is a test message"
+                    message: "Hello world!",
                 }
-            };
+            }
+
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
+
             const body = {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            };
-            fetch("http:\/\/localhost:8080/handle", body)
-                .then(response => response.json())
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: headers,
+            }
+
+            fetch({{print .BrokerURL "/handle"}}, body)
+                .then((response) => response.json())
                 .then((data) => {
                     sent.innerHTML = JSON.stringify(payload, undefined, 4);
                     received.innerHTML = JSON.stringify(data, undefined, 4);
                     if (data.error) {
-                        outPut.innerHTML = data.error;
+                        output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
                     } else {
-                        outPut.innerHTML += `<br><strong>Response from the broker service</strong>: ${data.message}`;
+                        output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`;
                     }
                 })
-                .catch((error) => console.error(error));
+                .catch((error) => {
+                    output.innerHTML += "<br><br>Eror: " + error;
+                })
+        })
+
+        logGBtn.addEventListener("click", function() {
+            const payload = {
+                action: "log",
+                log: {
+                    name: "event",
+                    data: "Some kind of gRPC data",
+                }
+            }
+
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
+
+            const body = {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: headers,
+            }
+
+            fetch({{print .BrokerURL "/log-grpc"}}, body)
+                .then((response) => response.json())
+                .then((data) => {
+                    sent.innerHTML = JSON.stringify(payload, undefined, 4);
+                    received.innerHTML = JSON.stringify(data, undefined, 4);
+                    if (data.error) {
+                        output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
+                    } else {
+                        output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`;
+                    }
+                })
+                .catch((error) => {
+                    output.innerHTML += "<br><br>Error: " + error;
+                })
         })
 
         logBtn.addEventListener("click", function() {
             const payload = {
                 action: "log",
                 log: {
-                    name: "info",
-                    data: "This is a test message"
+                    name: "event",
+                    data: "Some kind of data",
                 }
-            };
+            }
+
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
+
             const body = {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            };
-            fetch("http:\/\/localhost:8080/handle", body)
-                .then(response => response.json())
+                body: JSON.stringify(payload),
+                headers: headers,
+            }
+
+            fetch({{print .BrokerURL "/handle"}}, body)
+                .then((response) => response.json())
                 .then((data) => {
                     sent.innerHTML = JSON.stringify(payload, undefined, 4);
                     received.innerHTML = JSON.stringify(data, undefined, 4);
                     if (data.error) {
-                        outPut.innerHTML = data.error;
+                        output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
                     } else {
-                        outPut.innerHTML += `<br><strong>Response from the broker service</strong>: ${data.message}`;
+                        output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`;
                     }
                 })
                 .catch((error) => {
-                    outPut.innerHTML += "<br><strong>Error:</strong> " + error;
-                });
+                    output.innerHTML += "<br><br>Error: " + error;
+                })
         })
 
-        brokerBtn.addEventListener("click", function() {
-            const body = {
-                method: "POST",
-            };
-            fetch("http:\/\/localhost:8080/broker", body)
-                .then(response => response.json())
-                .then((data) => {
-                    sent.innerHTML = "empty post request";
-                    received.innerHTML = JSON.stringify(data, undefined, 4);
-                    if (data.error) {
-                        outPut.innerHTML = data.error;
-                    } else {
-                        outPut.innerHTML += `<br><strong>Response from the broker service</strong>: ${data.message}`;
-                    }
-                })
-                .catch((error) => console.error(error));
-        });
         authBrokerBtn.addEventListener("click", function() {
+
             const payload = {
                 action: "auth",
                 auth: {
                     email: "admin@example.com",
-                    password: "verysecret"
+                    password: "verysecret",
                 }
-            };
+            }
 
-            const header = new Headers();
-            header.append("Content-Type", "application/json");
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
 
             const body = {
-                method: "POST",
-                headers: header,
-                body: JSON.stringify(payload)
-            };
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: headers,
+            }
 
-            fetch("http:\/\/localhost:8080/handle", body)
-                .then(response => response.json())
+            fetch({{print .BrokerURL "/handle"}}, body)
+                .then((response) => response.json())
                 .then((data) => {
                     sent.innerHTML = JSON.stringify(payload, undefined, 4);
                     received.innerHTML = JSON.stringify(data, undefined, 4);
-                    if (data.error){
-                        outPut.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
+                    if (data.error) {
+                        output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
                     } else {
-                        outPut.innerHTML += `<br><strong>Response from the broker service</strong>: ${data.message}`;
+                        output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`;
                     }
                 })
                 .catch((error) => {
-                    outPut.innerHTML += "<br><strong>Error:</strong> " + error;
-                });
-        });
+                    output.innerHTML += "<br><br>Eror: " + error;
+                })
+        })
+
+        brokerBtn.addEventListener("click", function() {
+
+            const body = {
+                method: 'POST',
+            }
+
+            fetch({{print .BrokerURL "/broker"}}, body)
+                .then((response) => response.json())
+                .then((data) => {
+                    sent.innerHTML ="empty post request";
+                    received.innerHTML = JSON.stringify(data, undefined, 4);
+                    if (data.error) {
+                        console.log(data.message);
+                    } else {
+                        output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`;
+                    }
+                })
+                .catch((error) => {
+                    output.innerHTML += "<br><br>Eror: " + error;
+                })
+        })
+
     </script>
 {{end}}
